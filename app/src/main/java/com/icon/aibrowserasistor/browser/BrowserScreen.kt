@@ -21,9 +21,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,6 +49,10 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material.icons.filled.Summarize
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.window.Dialog
 import android.webkit.WebView
 import com.icon.aibrowserasistor.ai.service.PageSummaryService
 import com.icon.aibrowserasistor.AppDependencies
@@ -62,6 +69,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
     val fabExpanded = remember { mutableStateOf(false) }
     val webViewRef = remember { mutableStateOf<WebView?>(null) }
     val summaryText = remember { mutableStateOf("") }
+    val showSummaryDialog = remember { mutableStateOf(false) }
     val deps = remember { AppDependencies() }
     val scope = rememberCoroutineScope()
 
@@ -113,26 +121,52 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
                 },
                 onMore = { fabExpanded.value = !fabExpanded.value }
             )
-
-            if (summaryText.value.isNotBlank()) {
-                Text(text = "AI 总结：${summaryText.value}")
-            }
         }
 
         RadialFabMenu(
             expanded = fabExpanded.value,
             onToggle = { fabExpanded.value = !fabExpanded.value },
             onAction1 = {
+
+            },
+            onAction2 = { /* TODO: action 2 */ },
+            onAction3 = {
                 val view = webViewRef.value ?: return@RadialFabMenu
                 scope.launch {
                     summaryText.value = "总结中..."
                     val service = PageSummaryService(view, deps.ai())
                     summaryText.value = service.summarizePage(state.pageContent)
+                    showSummaryDialog.value = true
                 }
-            },
-            onAction2 = { /* TODO: action 2 */ },
-            onAction3 = { /* TODO: action 3 */ }
+            }
         )
+
+        if (showSummaryDialog.value) {
+            Dialog(onDismissRequest = { showSummaryDialog.value = false }) {
+                Surface(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 50.dp)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(text = "AI 总结", fontWeight = FontWeight.Bold)
+                        Text(text = summaryText.value)
+                        Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                            Button(onClick = { showSummaryDialog.value = false }) {
+                                Text("关闭")
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
