@@ -38,6 +38,7 @@ fun BrowserWebView(
     modifier: Modifier = Modifier,
     url: String?,
     onCreated: (BrowserWebViewController) -> Unit,
+    onWebViewReady: (WebView) -> Unit = {},
     onPageStarted: (String?) -> Unit,
     onPageFinished: (String?, String?) -> Unit,
     onNavigationState: (Boolean, Boolean) -> Unit,
@@ -61,6 +62,7 @@ fun BrowserWebView(
 
     DisposableEffect(Unit) {
         onCreated(BrowserWebViewController(webView))
+        onWebViewReady(webView)
         onDispose {
             webView.destroy()
         }

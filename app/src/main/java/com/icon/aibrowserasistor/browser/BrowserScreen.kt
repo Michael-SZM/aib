@@ -30,6 +30,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -45,6 +46,10 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material.icons.filled.Summarize
 import androidx.compose.material3.FloatingActionButton
+import android.webkit.WebView
+import com.icon.aibrowserasistor.ai.service.PageSummaryService
+import com.icon.aibrowserasistor.AppDependencies
+import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -55,6 +60,10 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
     val state by viewModel.uiState.collectAsState()
     val controllerState = remember { mutableStateOf<BrowserWebViewController?>(null) }
     val fabExpanded = remember { mutableStateOf(false) }
+    val webViewRef = remember { mutableStateOf<WebView?>(null) }
+    val summaryText = remember { mutableStateOf("") }
+    val deps = remember { AppDependencies() }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         if (state.currentUrl == null) {
@@ -83,6 +92,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
                     modifier = Modifier.fillMaxSize(),
                     url = state.currentUrl,
                     onCreated = { controllerState.value = it },
+                    onWebViewReady = { webViewRef.value = it },
                     onPageStarted = viewModel::onPageStarted,
                     onPageFinished = viewModel::onPageFinished,
                     onNavigationState = viewModel::onNavigationState,
@@ -103,12 +113,23 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
                 },
                 onMore = { fabExpanded.value = !fabExpanded.value }
             )
+
+            if (summaryText.value.isNotBlank()) {
+                Text(text = "AI 总结：${summaryText.value}")
+            }
         }
 
         RadialFabMenu(
             expanded = fabExpanded.value,
             onToggle = { fabExpanded.value = !fabExpanded.value },
-            onAction1 = { /* TODO: action 1 */ },
+            onAction1 = {
+                val view = webViewRef.value ?: return@RadialFabMenu
+                scope.launch {
+                    summaryText.value = "总结中..."
+                    val service = PageSummaryService(view, deps.ai())
+                    summaryText.value = service.summarizePage(state.pageContent)
+                }
+            },
             onAction2 = { /* TODO: action 2 */ },
             onAction3 = { /* TODO: action 3 */ }
         )
@@ -146,8 +167,15 @@ private fun UrlControls(
 }
 
 @Composable
-private fun PageContentPreview(content: String) {
-    Text(text = if (content.isBlank()) "内容抓取中..." else content)
+private fun PageContentPreview(content: String, summary: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(text = if (content.isBlank()) "内容抓取中..." else content)
+        if (summary.isNotBlank()) {
+            HorizontalDivider()
+            Text(text = "AI 总结：")
+            Text(text = summary)
+        }
+    }
 }
 
 @Composable

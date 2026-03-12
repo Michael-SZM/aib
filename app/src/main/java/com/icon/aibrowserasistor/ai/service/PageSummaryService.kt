@@ -13,9 +13,9 @@ class PageSummaryService(
     private val chunkSize: Int = 800
 ) {
 
-    suspend fun summarizePage(): String = withContext(Dispatchers.IO) {
-        val rawText = WebParser.extractPageText(webView)
-        val chunks = WebParser.chunkText(rawText, chunkSize).ifEmpty { listOf(rawText) }
+    suspend fun summarizePage(pageContent: String): String = withContext(Dispatchers.IO) {
+//        val rawText = WebParser.extractPageText(webView)
+        val chunks = WebParser.chunkText(pageContent, chunkSize).ifEmpty { listOf() }
 
         val partialSummaries = chunks.map { chunk -> summarizeChunk(chunk) }.filter { it.isNotBlank() }
         if (partialSummaries.isEmpty()) return@withContext "No content to summarize"
