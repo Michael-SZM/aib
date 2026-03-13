@@ -66,4 +66,6 @@ class AppDependencies {
     fun session(): SessionRepository = sessionRepository
 
     fun memory(): AgentMemory = agentMemory
+
+    fun rag(): RAGEngine = ragEngine
 }

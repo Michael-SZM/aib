@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -55,6 +56,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.window.Dialog
 import android.webkit.WebView
 import com.icon.aibrowserasistor.ai.service.PageSummaryService
+import com.icon.aibrowserasistor.ai.service.AskPageService
 import com.icon.aibrowserasistor.AppDependencies
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -70,6 +72,10 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
     val webViewRef = remember { mutableStateOf<WebView?>(null) }
     val summaryText = remember { mutableStateOf("") }
     val showSummaryDialog = remember { mutableStateOf(false) }
+    val showQADialog = remember { mutableStateOf(false) }
+    val qaInput = remember { mutableStateOf("") }
+    val qaMessages = remember { mutableStateListOf<Pair<String, String>>() }
+    val qaLoading = remember { mutableStateOf(false) }
     val deps = remember { AppDependencies() }
     val scope = rememberCoroutineScope()
 
@@ -127,10 +133,6 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
             expanded = fabExpanded.value,
             onToggle = { fabExpanded.value = !fabExpanded.value },
             onAction1 = {
-
-            },
-            onAction2 = { /* TODO: action 2 */ },
-            onAction3 = {
                 val view = webViewRef.value ?: return@RadialFabMenu
                 scope.launch {
                     summaryText.value = "总结中..."
@@ -138,7 +140,37 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
                     summaryText.value = service.summarizePage(state.pageContent)
                     showSummaryDialog.value = true
                 }
-            }
+            },
+            onAction2 = {
+                if (qaMessages.isEmpty()) {
+                    qaMessages.add("system" to "欢迎来到问答模块，请输入您的问题。")
+                }
+                showQADialog.value = true
+            },
+            onAction3 = { /* TODO: action 3 */ }
+        )
+
+        QADialog(
+            visible = showQADialog.value,
+            messages = qaMessages,
+            input = qaInput.value,
+            onInputChange = { qaInput.value = it },
+            loading = qaLoading.value,
+            onSend = {
+                val view = webViewRef.value ?: return@QADialog
+                val question = qaInput.value.trim()
+                if (question.isBlank()) return@QADialog
+                qaMessages.add("user" to question)
+                qaInput.value = ""
+                scope.launch {
+                    qaLoading.value = true
+                    val service = AskPageService(view, deps.rag(), deps.ai())
+                    val answer = service.askPage(question)
+                    qaMessages.add("assistant" to answer)
+                    qaLoading.value = false
+                }
+            },
+            onDismiss = { showQADialog.value = false }
         )
 
         if (showSummaryDialog.value) {
@@ -279,6 +311,82 @@ private fun RadialFabMenu(
             shape = CircleShape
         ) {
             Icon(if (expanded) Icons.Default.Close else Icons.Default.Add, contentDescription = "工具菜单")
+        }
+    }
+}
+
+@Composable
+private fun QADialog(
+    visible: Boolean,
+    messages: List<Pair<String, String>>,
+    input: String,
+    onInputChange: (String) -> Unit,
+    onSend: () -> Unit,
+    onDismiss: () -> Unit,
+    loading: Boolean
+) {
+    if (!visible) return
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 50.dp)
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "网页问答", fontWeight = FontWeight.Bold)
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "关闭")
+                    }
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    messages.forEach { (role, text) ->
+                        val alignment = if (role == "user") Alignment.End else Alignment.Start
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = if (role == "user") Arrangement.End else Arrangement.Start) {
+                            Surface(
+                                color = if (role == "user") MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = text,
+                                    modifier = Modifier.padding(12.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        modifier = Modifier.weight(1f),
+                        value = input,
+                        onValueChange = onInputChange,
+                        singleLine = true,
+                        label = { Text("请输入问题") }
+                    )
+                    Button(onClick = onSend, enabled = input.isNotBlank() && !loading) {
+                        Text(if (loading) "发送中..." else "发送")
+                    }
+                }
+            }
         }
     }
 }
