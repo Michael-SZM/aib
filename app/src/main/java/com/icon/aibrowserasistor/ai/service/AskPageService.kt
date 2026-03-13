@@ -13,9 +13,9 @@ class AskPageService(
     private val ragEngine: RAGEngine,
     private val aiClient: AIClient
 ) {
-    suspend fun askPage(question: String): String = withContext(Dispatchers.IO) {
-        val pageText = WebParser.extractPageText(webView)
-        ragEngine.index(pageText)
+    suspend fun askPage(pageContent: String,question: String): String = withContext(Dispatchers.IO) {
+//        val pageText = WebParser.extractPageText(webView)
+        ragEngine.index(pageContent)
         val context = ragEngine.retrieveContext(question)
 
         val messages = buildList {

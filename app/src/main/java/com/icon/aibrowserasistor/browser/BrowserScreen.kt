@@ -50,6 +50,10 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material.icons.filled.Summarize
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,6 +63,9 @@ import com.icon.aibrowserasistor.ai.service.PageSummaryService
 import com.icon.aibrowserasistor.ai.service.AskPageService
 import com.icon.aibrowserasistor.AppDependencies
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.animateScrollBy
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -76,6 +83,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
     val qaInput = remember { mutableStateOf("") }
     val qaMessages = remember { mutableStateListOf<Pair<String, String>>() }
     val qaLoading = remember { mutableStateOf(false) }
+    val qaScrollState = rememberScrollState()
     val deps = remember { AppDependencies() }
     val scope = rememberCoroutineScope()
 
@@ -156,6 +164,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
             input = qaInput.value,
             onInputChange = { qaInput.value = it },
             loading = qaLoading.value,
+            scrollState = qaScrollState,
             onSend = {
                 val view = webViewRef.value ?: return@QADialog
                 val question = qaInput.value.trim()
@@ -165,8 +174,9 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
                 scope.launch {
                     qaLoading.value = true
                     val service = AskPageService(view, deps.rag(), deps.ai())
-                    val answer = service.askPage(question)
+                    val answer = service.askPage(state.pageContent,question)
                     qaMessages.add("assistant" to answer)
+                    qaScrollState.scrollTo(qaScrollState.maxValue)
                     qaLoading.value = false
                 }
             },
@@ -323,7 +333,8 @@ private fun QADialog(
     onInputChange: (String) -> Unit,
     onSend: () -> Unit,
     onDismiss: () -> Unit,
-    loading: Boolean
+    loading: Boolean,
+    scrollState: androidx.compose.foundation.ScrollState
 ) {
     if (!visible) return
     Dialog(onDismissRequest = onDismiss) {
@@ -339,6 +350,12 @@ private fun QADialog(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                LaunchedEffect(messages.size) {
+                    val delta = scrollState.maxValue - scrollState.value
+                    if (delta > 0) {
+                        scrollState.animateScrollBy(delta.toFloat())
+                    }
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -352,7 +369,7 @@ private fun QADialog(
                 Column(
                     modifier = Modifier
                         .weight(1f, fill = false)
-                        .verticalScroll(rememberScrollState()),
+                        .verticalScroll(scrollState),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     messages.forEach { (role, text) ->
@@ -380,7 +397,14 @@ private fun QADialog(
                         value = input,
                         onValueChange = onInputChange,
                         singleLine = true,
-                        label = { Text("请输入问题") }
+                        label = { Text("请输入问题") },
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Send,
+                            keyboardType = KeyboardType.Text
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onSend = { onSend() }
+                        )
                     )
                     Button(onClick = onSend, enabled = input.isNotBlank() && !loading) {
                         Text(if (loading) "发送中..." else "发送")
