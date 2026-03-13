@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -34,6 +35,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -59,9 +61,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.window.Dialog
 import android.webkit.WebView
+import androidx.activity.ComponentActivity
 import com.icon.aibrowserasistor.ai.service.PageSummaryService
 import com.icon.aibrowserasistor.ai.service.AskPageService
 import com.icon.aibrowserasistor.AppDependencies
+import com.icon.aibrowserasistor.voice.SpeechServiceLocator
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import androidx.compose.animation.core.tween
@@ -69,6 +73,10 @@ import androidx.compose.foundation.gestures.animateScrollBy
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.rememberUpdatedState
+import android.Manifest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +92,16 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
     val qaMessages = remember { mutableStateListOf<Pair<String, String>>() }
     val qaLoading = remember { mutableStateOf(false) }
     val qaScrollState = rememberScrollState()
+    val summaryInput = remember { mutableStateOf("") }
+    val showSummaryInputDialog = remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val micPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            SpeechServiceLocator.facade().start { result ->
+                summaryInput.value = result.text
+            }
+        }
+    }
     val deps = remember { AppDependencies() }
     val scope = rememberCoroutineScope()
 
@@ -141,13 +159,7 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
             expanded = fabExpanded.value,
             onToggle = { fabExpanded.value = !fabExpanded.value },
             onAction1 = {
-                val view = webViewRef.value ?: return@RadialFabMenu
-                scope.launch {
-                    summaryText.value = "总结中..."
-                    val service = PageSummaryService(view, deps.ai())
-                    summaryText.value = service.summarizePage(state.pageContent)
-                    showSummaryDialog.value = true
-                }
+                showSummaryInputDialog.value = true
             },
             onAction2 = {
                 if (qaMessages.isEmpty()) {
@@ -155,7 +167,15 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
                 }
                 showQADialog.value = true
             },
-            onAction3 = { /* TODO: action 3 */ }
+            onAction3 = {
+                val view = webViewRef.value ?: return@RadialFabMenu
+                scope.launch {
+                    summaryText.value = "总结中..."
+                    val service = PageSummaryService(view, deps.ai())
+                    summaryText.value = service.summarizePage(state.pageContent)
+                    showSummaryDialog.value = true
+                }
+            }
         )
 
         QADialog(
@@ -176,12 +196,68 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
                     val service = AskPageService(view, deps.rag(), deps.ai())
                     val answer = service.askPage(state.pageContent,question)
                     qaMessages.add("assistant" to answer)
-                    qaScrollState.scrollTo(qaScrollState.maxValue)
+                    delay(50)
+                    qaScrollState.animateScrollBy((qaScrollState.maxValue - qaScrollState.value).toFloat())
                     qaLoading.value = false
                 }
             },
             onDismiss = { showQADialog.value = false }
         )
+
+        if (showSummaryInputDialog.value) {
+            Dialog(onDismissRequest = { showSummaryInputDialog.value = false }) {
+                Surface(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 50.dp)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "AI 总结", fontWeight = FontWeight.Bold)
+                            IconButton(onClick = { showSummaryInputDialog.value = false }) {
+                                Icon(Icons.Default.Close, contentDescription = "关闭")
+                            }
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(
+                                modifier = Modifier.weight(1f),
+                                value = summaryInput.value,
+                                onValueChange = { summaryInput.value = it },
+                                singleLine = true,
+                                label = { Text("输入总结指令") }
+                            )
+                            IconButton(onClick = {
+                                micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                            }) {
+                                Icon(Icons.Default.Mic, contentDescription = "语音输入")
+                            }
+                        }
+                        Button(onClick = {
+                            val view = webViewRef.value ?: return@Button
+                            scope.launch {
+                                summaryText.value = "总结中..."
+                                val service = PageSummaryService(view, deps.ai())
+                                summaryText.value = service.summarizePage(state.pageContent)
+                                showSummaryDialog.value = true
+                                showSummaryInputDialog.value = false
+                            }
+                        }) {
+                            Text("开始总结")
+                        }
+                    }
+                }
+            }
+        }
 
         if (showSummaryDialog.value) {
             Dialog(onDismissRequest = { showSummaryDialog.value = false }) {

@@ -1,10 +1,35 @@
-e: file:///Users/apus/Downloads/pratise/pp/AIBrowserAsistor/app/src/main/java/com/icon/aibrowserasistor/browser/BrowserScreen.kt:193:40 None of the following candidates is applicable:
-fun times(other: Float): Dp
-fun times(other: Int): Dp
-Ask Gemini
-
-e: file:///Users/apus/Downloads/pratise/pp/AIBrowserAsistor/app/src/main/java/com/icon/aibrowserasistor/browser/BrowserScreen.kt:194:40 None of the following candidates is applicable:
-fun times(other: Float): Dp
-fun times(other: Int): Dp
-Ask Gemini
-
+FATAL EXCEPTION: main (Ask Gemini)
+                                                                                                    Process: com.icon.aibrowserasistor, PID: 7614
+                                                                                                    java.lang.IllegalStateException: LifecycleOwner com.icon.aibrowserasistor.MainActivity@7f79b56 is attempting to register while current state is RESUMED. LifecycleOwners must call register before they are STARTED.
+                                                                                                    	at androidx.activity.result.ActivityResultRegistry.register(ActivityResultRegistry.kt:88)
+                                                                                                    	at androidx.activity.ComponentActivity.registerForActivityResult(ComponentActivity.kt:816)
+                                                                                                    	at androidx.activity.ComponentActivity.registerForActivityResult(ComponentActivity.kt:828)
+                                                                                                    	at com.icon.aibrowserasistor.voice.PermissionHelper.register(PermissionHelper.kt:14)
+                                                                                                    	at com.icon.aibrowserasistor.browser.BrowserScreenKt$BrowserScreen$2$10$1.invoke$lambda$16$lambda$13$lambda$12$lambda$11(BrowserScreen.kt:237)
+                                                                                                    	at com.icon.aibrowserasistor.browser.BrowserScreenKt$BrowserScreen$2$10$1.$r8$lambda$OPMixbd-pOGnOBqi3Y9jGryR-II(Unknown Source:0)
+                                                                                                    	at com.icon.aibrowserasistor.browser.BrowserScreenKt$BrowserScreen$2$10$1$$ExternalSyntheticLambda2.invoke(D8$$SyntheticClass:0)
+                                                                                                    	at androidx.compose.foundation.ClickableNode.onPointerEvent-H0pRuoY(Clickable.kt:1009)
+                                                                                                    	at androidx.compose.ui.input.pointer.Node.dispatchMainEventPass(HitPathTracker.kt:436)
+                                                                                                    	at androidx.compose.ui.input.pointer.Node.dispatchMainEventPass(HitPathTracker.kt:422)
+                                                                                                    	at androidx.compose.ui.input.pointer.NodeParent.dispatchMainEventPass(HitPathTracker.kt:275)
+                                                                                                    	at androidx.compose.ui.input.pointer.HitPathTracker.dispatchChanges(HitPathTracker.kt:171)
+                                                                                                    	at androidx.compose.ui.input.pointer.PointerInputEventProcessor.process-BIzXfog(PointerInputEventProcessor.kt:118)
+                                                                                                    	at androidx.compose.ui.platform.AndroidComposeView.sendMotionEvent-8iAsVTc(AndroidComposeView.android.kt:2428)
+                                                                                                    	at androidx.compose.ui.platform.AndroidComposeView.handleMotionEvent-8iAsVTc(AndroidComposeView.android.kt:2378)
+                                                                                                    	at androidx.compose.ui.platform.AndroidComposeView.dispatchTouchEvent(AndroidComposeView.android.kt:2249)
+                                                                                                    	at android.view.ViewGroup.dispatchTransformedTouchEvent(ViewGroup.java:3132)
+                                                                                                    	at android.view.ViewGroup.dispatchTouchEvent(ViewGroup.java:2813)
+                                                                                                    	at android.view.ViewGroup.dispatchTransformedTouchEvent(ViewGroup.java:3132)
+                                                                                                    	at android.view.ViewGroup.dispatchTouchEvent(ViewGroup.java:2813)
+                                                                                                    	at android.view.ViewGroup.dispatchTransformedTouchEvent(ViewGroup.java:3132)
+                                                                                                    	at android.view.ViewGroup.dispatchTouchEvent(ViewGroup.java:2813)
+                                                                                                    	at android.view.ViewGroup.dispatchTransformedTouchEvent(ViewGroup.java:3132)
+                                                                                                    	at android.view.ViewGroup.dispatchTouchEvent(ViewGroup.java:2813)
+                                                                                                    	at com.android.internal.policy.DecorView.superDispatchTouchEvent(DecorView.java:571)
+                                                                                                    	at com.android.internal.policy.PhoneWindow.superDispatchTouchEvent(PhoneWindow.java:1899)
+                                                                                                    	at android.app.Dialog.dispatchTouchEvent(Dialog.java:920)
+                                                                                                    	at com.android.internal.policy.DecorView.dispatchTouchEvent(DecorView.java:529)
+                                                                                                    	at android.view.View.dispatchPointerEvent(View.java:15334)
+                                                                                                    	at android.view.ViewRootImpl$ViewPostImeInputStage.processPointerEvent(ViewRootImpl.java:6955)
+                                                                                                    	at android.view.ViewRootImpl$ViewPostImeInputStage.onProcess(ViewRootImpl.java:6742)
+                                                                                                    	at android.view.ViewRootImpl$InputStage.deliver(ViewRootImpl.java:6161)

@@ -4,4 +4,13 @@
 
     <uses-sdk android:minSdkVersion="24" />
 
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <application>
+        <provider
+            android:name="com.icon.aibrowserasistor.voice.SpeechFacadeProvider"
+            android:authorities="com.icon.aibrowserasistor.voice.provider"
+            android:exported="false" />
+    </application>
+
 </manifest>
