@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(project(":voice"))
     implementation(libs.jsoup)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)

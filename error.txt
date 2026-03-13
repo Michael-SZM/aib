@@ -1,6 +1,10 @@
-> Task :app:compileDebugKotlin FAILED
-e: file:///Users/apus/Downloads/pratise/pp/AIBrowserAsistor/app/src/main/java/com/icon/aibrowserasistor/browser/BrowserScreen.kt:46:13 This material API is experimental and is likely to change or to be removed in the future.
-e: file:///Users/apus/Downloads/pratise/pp/AIBrowserAsistor/app/src/main/java/com/icon/aibrowserasistor/parser/WebParser.kt:57:35 Unsupported escape sequence.
-e: file:///Users/apus/Downloads/pratise/pp/AIBrowserAsistor/app/src/main/java/com/icon/aibrowserasistor/parser/WebParser.kt:62:40 Unsupported escape sequence.
+e: file:///Users/apus/Downloads/pratise/pp/AIBrowserAsistor/app/src/main/java/com/icon/aibrowserasistor/browser/BrowserScreen.kt:193:40 None of the following candidates is applicable:
+fun times(other: Float): Dp
+fun times(other: Int): Dp
+Ask Gemini
 
-FAILURE: Build failed with an exception.
+e: file:///Users/apus/Downloads/pratise/pp/AIBrowserAsistor/app/src/main/java/com/icon/aibrowserasistor/browser/BrowserScreen.kt:194:40 None of the following candidates is applicable:
+fun times(other: Float): Dp
+fun times(other: Int): Dp
+Ask Gemini
+

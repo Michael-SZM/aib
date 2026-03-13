@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <application>
+        <provider
+            android:name="com.icon.aibrowserasistor.voice.SpeechFacadeProvider"
+            android:authorities="com.icon.aibrowserasistor.voice.provider"
+            android:exported="false" />
+    </application>
+</manifest>
