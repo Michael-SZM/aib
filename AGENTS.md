@@ -1,39 +1,42 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Single Android application module in `app/`; top-level Gradle config lives at the repository root.
-- Application code sits in `app/src/main/java/com/icon/aibrowserasistor/`; entry point `MainActivity.kt` with Compose theme helpers under `ui/theme/`.
-- UI assets and configuration resources live in `app/src/main/res/` (values, drawables, mipmaps, XML).
-- JVM unit tests belong in `app/src/test/java/`; device/emulator tests belong in `app/src/androidTest/java/` (see `ExampleInstrumentedTest.kt`).
-- Prompt and design reference notes are under `tsc/`; keep generated artifacts out of `src/`.
+- This repository contains one Android app module in `app/`, with Gradle config at the root.
+- Main Kotlin sources live in `app/src/main/java/com/icon/aibrowserasistor/`, with `MainActivity.kt` as the entry point.
+- Compose theme code belongs in `app/src/main/java/com/icon/aibrowserasistor/ui/theme/`.
+- Android resources are in `app/src/main/res/` (`values/`, `drawable/`, `mipmap/`, XML layouts/config).
+- Local JVM tests are under `app/src/test/java/`; device/emulator tests are under `app/src/androidTest/java/`.
+- Product notes and prompt references are in `tsc/`; keep generated artifacts out of `src/`.
 
 ## Build, Test, and Development Commands
-- `./gradlew assembleDebug` — builds the debug APK.
-- `./gradlew test` — runs JVM unit tests.
-- `./gradlew connectedAndroidTest` — runs instrumented tests on an attached device/emulator.
-- `./gradlew lint` — optional static checks; fix warnings before merging.
-- Use Android Studio (Hedgehog or newer) with the bundled emulator for the fastest feedback loop.
+- `./gradlew assembleDebug` — Build the debug APK.
+- `./gradlew test` — Run JVM unit tests.
+- `./gradlew connectedAndroidTest` — Run instrumented tests on a connected emulator/device.
+- `./gradlew lint` — Run Android lint checks; resolve warnings before merging when possible.
+- `./gradlew clean` — Clear build outputs before release packaging.
+- Use Android Studio (Hedgehog or newer) for the quickest Compose and emulator feedback loop.
 
 ## Coding Style & Naming Conventions
-- Kotlin + Compose-first; use 4-space indentation, avoid trailing whitespace, prefer expression-bodied functions when clear.
-- Classes/objects use UpperCamelCase; functions and properties use lowerCamelCase; constants use UPPER_SNAKE_CASE.
-- Compose composables use noun phrases ending in `*Screen`/`*Card`; previews are annotated with `@Preview` and suffixed `Preview`.
-- Resource files use lowercase snake_case (`ic_logo.png`, `activity_main.xml`); keep theme-related code under `ui/theme/`.
-- Use Android Studio’s formatter; keep imports sorted by the IDE; avoid wildcard imports.
+- Use Kotlin with a Compose-first approach, 4-space indentation, and no trailing whitespace.
+- Prefer expression-bodied functions when readability is improved.
+- Use `UpperCamelCase` for classes/objects, `lowerCamelCase` for functions/properties, and `UPPER_SNAKE_CASE` for constants.
+- Name composables as nouns, commonly ending with `Screen` or `Card`; preview functions should end with `Preview` and use `@Preview`.
+- Keep resource names lowercase snake_case (for example, `ic_logo.png`); avoid wildcard imports.
 
 ## Testing Guidelines
-- Mirror production package structure under `test` and `androidTest`; suffix files with `Test` or `InstrumentedTest`.
-- Cover new logic with JUnit4 tests; for Compose UI, rely on `androidx.compose.ui.test.junit4` semantics-based assertions.
-- Keep tests deterministic: avoid thread sleeps, prefer idling resources and fakes.
-- When fixing bugs, add regression tests or document why coverage is deferred in the PR.
+- Mirror the production package structure in both test source sets.
+- Name test files with `*Test` (unit) and `*InstrumentedTest` (device).
+- Use JUnit4 for logic tests and `androidx.compose.ui.test.junit4` for Compose UI assertions.
+- Keep tests deterministic: avoid `Thread.sleep`; prefer fakes and idling-aware approaches.
+- Add regression coverage for bug fixes, or explain any deferred coverage in the PR.
 
 ## Commit & Pull Request Guidelines
-- Repository lacks existing history; adopt Conventional Commits (e.g., `feat: add tabbed browser view`, `fix: handle null url`) with imperative subjects ≤72 characters.
-- Include scope hints when helpful (e.g., `feat(app): ...`).
-- PRs should summarize behavior changes, link issues/features, provide test evidence (`./gradlew test`, emulator screenshots for UI), and note configuration impacts.
-- Keep PRs focused; split unrelated refactors into follow-ups.
+- Follow Conventional Commits (for example, `feat: add tabbed browser view`, `fix: handle null url`).
+- Keep subjects imperative and within ~72 characters; use scopes when useful (for example, `feat(app): ...`).
+- PRs should describe behavior changes, link related issues, and include verification evidence (such as `./gradlew test`, `./gradlew lint`).
+- Include emulator screenshots for visible UI changes.
+- Keep each PR focused; move unrelated refactors to follow-up work.
 
 ## Security & Configuration Tips
-- Never commit secrets; store API keys in `local.properties` or environment variables and access via Gradle properties.
-- Review WebView/network changes for secure defaults (HTTPS-first, minimal permissions).
-- Run `./gradlew clean` before release packaging to ensure reproducible outputs.
+- Never commit secrets. Keep keys in `local.properties` or environment variables, then read them via Gradle properties.
+- Review WebView and networking changes for secure defaults (HTTPS-first and least-required permissions).

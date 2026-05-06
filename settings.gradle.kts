@@ -22,4 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "AIBrowserAsistor"
 include(":app")
 include(":voice")
- 
+include(":hybrid")

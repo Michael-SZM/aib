@@ -1,0 +1,21 @@
+HybridContainer（容器入口）
+    ├── WebViewPool（预加载 + 复用🔥）
+    ├── BridgeCore（JSBridge 核心🔥）
+    │      ├── Protocol（JSON-RPC）
+    │      ├── Dispatcher（方法分发）
+    │      └── CallbackManager（回调池）
+    ├── ResourceManager（离线包🔥）
+    │      ├── VersionManager
+    │      ├── Downloader
+    │      └── Cache（本地资源映射）
+    ├── SecurityManager（安全🔥）
+    │      ├── Domain 白名单
+    │      ├── API 权限控制
+    ├── Monitor（监控🔥）
+    │      ├── 性能（FCP/FMP）
+    │      ├── JSBridge 耗时
+    │      └── Crash 监控
+    └── PluginSystem（插件化🔥）
+           ├── CameraPlugin
+           ├── LoginPlugin
+           └── PaymentPlugin
