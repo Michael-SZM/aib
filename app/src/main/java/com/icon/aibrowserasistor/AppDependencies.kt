@@ -10,7 +10,7 @@ import com.icon.aibrowserasistor.agent.RuleBasedPlanner
 import com.icon.aibrowserasistor.agent.ToolExecutor
 import com.icon.aibrowserasistor.agent.ToolRegistry
 import com.icon.aibrowserasistor.ai.sdk.AIClient
-import com.icon.aibrowserasistor.ai.sdk.FakeAIClient
+import com.icon.aibrowserasistor.ai.sdk.AIProvider
 import com.icon.aibrowserasistor.ai.sdk.PromptManager
 import com.icon.aibrowserasistor.browser.BrowserController
 import com.icon.aibrowserasistor.browser.DefaultBrowserController
@@ -27,8 +27,15 @@ import com.icon.aibrowserasistor.tools.web.WebToolRegistry
 class AppDependencies {
     private val vectorStore: VectorStore = InMemoryVectorStore()
     private val contentParser: ContentParser = DefaultContentParser()
-    private val aiClient: AIClient = FakeAIClient()
     private val promptManager = PromptManager()
+    private val aiClient: AIClient = AIClient(
+        AIProvider(
+            baseUrl = "https://api.deepseek.com",
+            apiKey = BuildConfig.DEEPSEEK_API_KEY,
+            defaultModel = "deepseek-flash"
+        ),
+        promptManager
+    )
     private val sessionRepository = SessionRepository()
     private val agentMemory = AgentMemory()
     private val embeddingService = FakeEmbeddingService()
