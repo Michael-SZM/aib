@@ -77,6 +77,16 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.rememberUpdatedState
 import android.Manifest
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import com.icon.aibrowserasistor.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,10 +115,13 @@ fun BrowserScreen(viewModel: BrowserViewModel = viewModel()) {
     val deps = remember { AppDependencies() }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        if (state.currentUrl == null) {
-            viewModel.loadRequestedUrl()
-        }
+    if (!state.enteredBrowser) {
+        BrowserStartPage(
+            query = state.urlInput,
+            onQueryChange = viewModel::onUrlInputChange,
+            onSearch = viewModel::submitSearch
+        )
+        return
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -315,6 +328,101 @@ private fun UrlControls(
                 progress = 0.4f
             )
         }
+    }
+}
+
+@Composable
+private fun BrowserStartPage(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit
+) {
+    val searchAlpha = remember { Animatable(0f) }
+    val searchOffsetY = remember { Animatable(24f) }
+    val logoAlpha = remember { Animatable(0f) }
+    val logoOffsetY = remember { Animatable(16f) }
+
+    LaunchedEffect(Unit) {
+        launch {
+            searchAlpha.animateTo(1f, tween(380, 60, FastOutSlowInEasing))
+        }
+        launch {
+            searchOffsetY.animateTo(0f, tween(380, 60, FastOutSlowInEasing))
+        }
+        launch {
+            logoAlpha.animateTo(1f, tween(420, 240, FastOutSlowInEasing))
+        }
+        launch {
+            logoOffsetY.animateTo(0f, tween(420, 240, FastOutSlowInEasing))
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Column(
+            modifier = Modifier.graphicsLayer {
+                alpha = logoAlpha.value
+                translationY = logoOffsetY.value
+            },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Surface(
+                modifier = Modifier.size(64.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primary
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_launcher_foreground),
+                    contentDescription = stringResource(R.string.app_name),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(7.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer {
+                    alpha = searchAlpha.value
+                    translationY = searchOffsetY.value
+                },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedTextField(
+                modifier = Modifier.weight(1f),
+                value = query,
+                onValueChange = onQueryChange,
+                singleLine = true,
+                shape = RoundedCornerShape(28.dp),
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                placeholder = { Text("搜索或输入网址") },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { onSearch() })
+            )
+            Button(
+                onClick = onSearch,
+                enabled = query.isNotBlank(),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Text(text = "搜索")
+            }
+        }
+
     }
 }
 

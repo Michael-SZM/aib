@@ -9,13 +9,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class BrowserUiState(
-    val urlInput: String = "https://www.example.com",
+    val urlInput: String = "",
     val currentUrl: String? = null,
     val pageTitle: String? = null,
     val canGoBack: Boolean = false,
     val canGoForward: Boolean = false,
     val isLoading: Boolean = false,
-    val pageContent: String = ""
+    val pageContent: String = "",
+    val enteredBrowser: Boolean = false
 )
 
 class BrowserViewModel : ViewModel() {
@@ -30,6 +31,15 @@ class BrowserViewModel : ViewModel() {
     fun loadRequestedUrl() {
         val url = normalizeUrl(_uiState.value.urlInput)
         _uiState.update { it.copy(currentUrl = url, isLoading = true) }
+    }
+
+    /**
+     * 首页搜索入口：仅当输入非空时进入浏览器 UI，导航规则复用 [loadRequestedUrl]。
+     */
+    fun submitSearch() {
+        if (_uiState.value.urlInput.isBlank()) return
+        loadRequestedUrl()
+        _uiState.update { it.copy(enteredBrowser = true) }
     }
 
     fun onPageStarted(url: String?) {
